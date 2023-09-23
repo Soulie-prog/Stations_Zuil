@@ -3,6 +3,12 @@ import random
 import time
 import sys
 
+Tijd_Nu = datetime.datetime.now().hour
+
+if 1 <= Tijd_Nu < 5:
+    print('')
+    sys.exit()
+
 bericht = input('Vul hier uw bericht in alstublieft (Max 140 karakters):')
 
 if 1 <= len(bericht) <= 140:
@@ -51,12 +57,10 @@ else:
     print('Bericht wordt verwijderd...')
     print('Bericht verwijderd!')
 
-Tijd_Nu = datetime.datetime.now().hour
 
 if 6 <= Tijd_Nu < 18:
     print(' Heb nog een prettige dag!')
-elif 1 <= Tijd_Nu < 5:
-    print('')
+
 else:
     print('Heb nog een fijne avond!')
 
