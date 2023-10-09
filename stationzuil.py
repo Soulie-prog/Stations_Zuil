@@ -15,18 +15,15 @@ while True:
 
     if len(bericht) == 0:
         print('Uw bericht is leeg. Probeer opnieuw.')
-        continue  # Gebruik continue om opnieuw te vragen om een bericht
+        continue  # continue om opnieuw te vragen om een bericht
 
     print('Uw bericht is opgeslagen!')
-    break
-
-if 1.00<= Tijd_Nu < 5.00:
-    print('Stationszuil kan op deze tijd niet worden gebruikt.')
-    print('Zuil wordt afgesloten...')
-    sys.exit()
+    break # geeft een break aan wat de while loop stopt
 
 
-confirmatie= input('weet u zeker dat u wil doorgaan? (ja/nee)')
+
+
+confirmatie= input('weet u zeker dat u wil doorgaan? (ja/nee)').lower()
 
 if confirmatie == 'ja':
     print('Doorgaan...')
@@ -43,6 +40,7 @@ if len(Naam) >= 1:
     print('hallo', Naam)
 
 else:
+    Naam = 'Anoniem'
     print('U bent anoniem')
 
 with open('data.txt', 'r') as file:
@@ -51,7 +49,7 @@ with open('data.txt', 'r') as file:
 Station_Keuze = random.choice(lijst).strip(' \t\n')
 print(f'Uw bericht is vanaf Station {Station_Keuze} gemaakt.')
 
-Goedkeuring = input('weet u zeker dat u dit bericht wil verzenden?(ja/nee)')
+Goedkeuring = input('weet u zeker dat u dit bericht wil verzenden?(ja/nee)').lower()
 
 if Goedkeuring == 'ja':
     print('Bericht is verzonden')
@@ -67,5 +65,7 @@ elif 6.00 <= Tijd_Nu < 11.59:
 else:
     print('Heb nog een fijne avond!')
 
+with open('Check_Bericht.csv','a') as file:
+    file.write(f'{datum}, {Station_Keuze}, \" {Naam} \",\" {bericht} \" \n')
 
 
