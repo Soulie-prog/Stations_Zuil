@@ -1,0 +1,50 @@
+import csv
+import psycopg2
+
+connection_string = f"host='localhost' dbname='StationZuil' user='postgres' password='Soulaim@n25'"
+
+conn = psycopg2.connect(connection_string)
+cursor = conn.cursor()
+
+query = "select * from berichtinfo";
+
+
+uitkomst = cursor.execute(query)
+records = cursor.fetchall()
+
+print(records)
+
+Naam_Moderator = input("Vul hier uw Moderator Naam: ")
+Email_Moderator = input("Vul hier uw Moderator Email: ")
+Datum_tijd = input("Vul hier de datum en tijd van de beoordeling in:(jaar-maand-dag uur- minuten seconden")
+
+with open('Check_Bericht.csv') as csvfile:
+    bestand = csv.reader(csvfile)
+    eerste_regel = next(bestand)  # Lees de eerste regel (kop) van het CSV-bestand
+    Bericht = None  # Initialiseer Bericht met None
+    for regel in bestand:
+        if len(regel) == 4:  # Controleer of elke regel vier velden heeft
+            Datum, Station, Naam, Bericht = regel
+            if Bericht is not None:  # Als Bericht al is toegewezen, sla het eerste bericht op en stop de lus
+                break
+
+if Bericht is not None:
+    check_bericht = input(f"Dit is het bericht: {Bericht}")
+else:
+    print("Geen geldige berichten gevonden in het CSV-bestand.")
+
+Goedkeurings_vraag = input("Wordt dit bericht goedgekeurd?(ja/nee) ")
+
+if Goedkeurings_vraag.lower() == 'ja':
+    Goedkeurings_vraag = True
+    print("bericht is goedkeurd")
+    cursor.execute(
+        "INSERT INTO berichten (bericht, beoordeling, datum_tijd, moderator_naam, moderator_email) VALUES (%s, %s, %s, %s, %s)",
+        (bericht, "Goedgekeurd", datum_tijd_beoordeling, naam, "moderator@email.com"))
+    conn.commit()
+
+else:
+    Goedkeurings_vraag = False
+    print("bericht is afgekeurd")
+
+if Goedkeurings_vraag == True:
