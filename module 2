@@ -2,10 +2,9 @@ import csv
 import psycopg2
 import uuid
 from datetime import datetime
-import os  # Import the os module for file operations
 
+# Database connection
 connection_string = "dbname='Stationsbase' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
-
 try:
     conn = psycopg2.connect(connection_string)
     cursor = conn.cursor()
@@ -13,58 +12,62 @@ except Exception as e:
     print(f"Database connection error: {e}")
     exit(1)
 
+# Input from the moderator
 Naam_Moderator = input("Vul hier uw Moderator Naam: ")
 Email_Moderator = input("Vul hier uw Moderator Email: ")
 Datum_tijd = datetime.now()
 
+# Read CSV
 with open('Check_Bericht.csv') as csvfile:
     bestand = csv.reader(csvfile)
     eerste_regel = next(bestand)
-    Bericht = None
-    filtered_content = [] 
+    approved_messages = []
 
     for regel in bestand:
         if len(regel) == 4:
             Datum, Station, Naam, Bericht = regel
 
-            check_bericht = input(f"Dit is het bericht: {Bericht}\nWordt dit bericht goedgekeurd? (ja/nee) ").lower()
+            while True:
+                check_bericht = input(f"Dit is het bericht: {Bericht}\nWordt dit bericht goedgekeurd? (ja/nee) ").lower()
 
-            if check_bericht == 'ja':
-                Goedkeurings_vraag = True
-                keuring = 'Goedgekeurd'
-                print("Bericht is goedgekeurd.")
-                break
+                if check_bericht == 'ja':
+                    Goedkeurings_vraag = True
+                    keuring = 'Goedgekeurd'
+                    print("Bericht is goedgekeurd.")
+                    break
+                elif check_bericht == 'nee':
+                    Goedkeurings_vraag = False
+                    keuring = 'Afgekeurd'
+                    print("Bericht is afgekeurd.")
+                    break
+                else:
+                    print("Beantwoord alleen met 'ja' of 'nee'.")
+                    continue
 
-            elif check_bericht == 'nee':
-                Goedkeurings_vraag = False
-                keuring = 'Afgekeurd'
-                print("Bericht is afgekeurd.")
-                break
-            else:
-                filtered_content.append(regel)  
+            # Generate a unique identifier for each message
+            unieke_id_0 = str(uuid.uuid4())
+            unieke_id_1 = str(uuid.uuid4())
 
-    if Bericht is not None:
-        # Generate unique identifiers
-        unieke_id_0 = str(uuid.uuid4())
-        unieke_id_1 = str(uuid.uuid4())
+            # Insert the approved message into the database
+            cursor.execute(
+                "INSERT INTO Goedkeuring_Check (nummer, bericht_check, keuring, tijd) VALUES (%s, %s, %s, %s)",
+                (unieke_id_0, Bericht, keuring, Datum_tijd))
+            cursor.execute(
+                "INSERT INTO Moderator (nummer, Moderator_naam, Moderator_Email) VALUES (%s, %s, %s)",
+                (unieke_id_1, Naam_Moderator, Email_Moderator))
+            conn.commit()
 
-        # Insert records into the tables
-        cursor.execute(
-            "INSERT INTO Goedkeuring_Check (nummer, bericht_check, keuring, tijd) VALUES (%s, %s, %s, %s)",
-            (unieke_id_0, Bericht, keuring, Datum_tijd))
-        cursor.execute(
-            "INSERT INTO Moderator (nummer, Moderator_naam, Moderator_Email) VALUES (%s, %s, %s)",
-            (unieke_id_1, Naam_Moderator, Email_Moderator))
-        conn.commit()
+        else:
+            approved_messages.append(regel)
     else:
-        print("Geen geldige berichten gevonden in het CSV-bestand.")
-
-# Rewrite the filtered content back to the CSV file
+        print("Er zijn op dit moment geen Berichten in het bestand")
+# Rewrite the approved content back to the original CSV file
 with open('Check_Bericht.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(eerste_regel) 
-    writer.writerows(filtered_content)  
+    writer.writerow(eerste_regel)  # Write the header
+    writer.writerows(approved_messages)  # Write the approved messages
 
+# Close database connection
 cursor.close()
 conn.close()
 
