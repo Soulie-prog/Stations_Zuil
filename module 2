@@ -1,50 +1,70 @@
 import csv
 import psycopg2
+import uuid
+from datetime import datetime
+import os  # Import the os module for file operations
 
-connection_string = f"host='localhost' dbname='StationZuil' user='postgres' password='Soulaim@n25'"
+connection_string = "dbname='Stationsbase' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
 
-conn = psycopg2.connect(connection_string)
-cursor = conn.cursor()
-
-query = "select * from berichtinfo";
-
-
-uitkomst = cursor.execute(query)
-records = cursor.fetchall()
-
-print(records)
+try:
+    conn = psycopg2.connect(connection_string)
+    cursor = conn.cursor()
+except Exception as e:
+    print(f"Database connection error: {e}")
+    exit(1)
 
 Naam_Moderator = input("Vul hier uw Moderator Naam: ")
 Email_Moderator = input("Vul hier uw Moderator Email: ")
-Datum_tijd = input("Vul hier de datum en tijd van de beoordeling in:(jaar-maand-dag uur- minuten seconden")
+Datum_tijd = datetime.now()
 
 with open('Check_Bericht.csv') as csvfile:
     bestand = csv.reader(csvfile)
-    eerste_regel = next(bestand)  # Lees de eerste regel (kop) van het CSV-bestand
-    Bericht = None  # Initialiseer Bericht met None
+    eerste_regel = next(bestand)
+    Bericht = None
+    filtered_content = []  # Create a list to store non-approved messages
+
     for regel in bestand:
-        if len(regel) == 4:  # Controleer of elke regel vier velden heeft
+        if len(regel) == 4:
             Datum, Station, Naam, Bericht = regel
-            if Bericht is not None:  # Als Bericht al is toegewezen, sla het eerste bericht op en stop de lus
+
+            check_bericht = input(f"Dit is het bericht: {Bericht}\nWordt dit bericht goedgekeurd? (ja/nee) ").lower()
+
+            if check_bericht == 'ja':
+                Goedkeurings_vraag = True
+                keuring = 'Goedgekeurd'
+                print("Bericht is goedgekeurd.")
                 break
 
-if Bericht is not None:
-    check_bericht = input(f"Dit is het bericht: {Bericht}")
-else:
-    print("Geen geldige berichten gevonden in het CSV-bestand.")
+            elif check_bericht == 'nee':
+                Goedkeurings_vraag = False
+                keuring = 'Afgekeurd'
+                print("Bericht is afgekeurd.")
+                break
+            else:
+                filtered_content.append(regel)  # Add the non-approved message to the filtered list
 
-Goedkeurings_vraag = input("Wordt dit bericht goedgekeurd?(ja/nee) ")
+    if Bericht is not None:
+        # Generate unique identifiers
+        unieke_id_0 = str(uuid.uuid4())
+        unieke_id_1 = str(uuid.uuid4())
 
-if Goedkeurings_vraag.lower() == 'ja':
-    Goedkeurings_vraag = True
-    print("bericht is goedkeurd")
-    cursor.execute(
-        "INSERT INTO berichten (bericht, beoordeling, datum_tijd, moderator_naam, moderator_email) VALUES (%s, %s, %s, %s, %s)",
-        (bericht, "Goedgekeurd", datum_tijd_beoordeling, naam, "moderator@email.com"))
-    conn.commit()
+        # Insert records into the tables
+        cursor.execute(
+            "INSERT INTO Goedkeuring_Check (nummer, bericht_check, keuring, tijd) VALUES (%s, %s, %s, %s)",
+            (unieke_id_0, Bericht, keuring, Datum_tijd))
+        cursor.execute(
+            "INSERT INTO Moderator (nummer, Moderator_naam, Moderator_Email) VALUES (%s, %s, %s)",
+            (unieke_id_1, Naam_Moderator, Email_Moderator))
+        conn.commit()
+    else:
+        print("Geen geldige berichten gevonden in het CSV-bestand.")
 
-else:
-    Goedkeurings_vraag = False
-    print("bericht is afgekeurd")
+# Rewrite the filtered content back to the CSV file
+with open('Check_Bericht.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(eerste_regel)  # Write the header
+    writer.writerows(filtered_content)  # Write the non-approved messages
 
-if Goedkeurings_vraag == True:
+cursor.close()
+conn.close()
+
