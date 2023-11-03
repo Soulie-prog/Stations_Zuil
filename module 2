@@ -21,7 +21,7 @@ with open('Check_Bericht.csv') as csvfile:
     bestand = csv.reader(csvfile)
     eerste_regel = next(bestand)
     Bericht = None
-    filtered_content = []  # Create a list to store non-approved messages
+    filtered_content = [] 
 
     for regel in bestand:
         if len(regel) == 4:
@@ -41,7 +41,7 @@ with open('Check_Bericht.csv') as csvfile:
                 print("Bericht is afgekeurd.")
                 break
             else:
-                filtered_content.append(regel)  # Add the non-approved message to the filtered list
+                filtered_content.append(regel)  
 
     if Bericht is not None:
         # Generate unique identifiers
@@ -62,8 +62,8 @@ with open('Check_Bericht.csv') as csvfile:
 # Rewrite the filtered content back to the CSV file
 with open('Check_Bericht.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(eerste_regel)  # Write the header
-    writer.writerows(filtered_content)  # Write the non-approved messages
+    writer.writerow(eerste_regel) 
+    writer.writerows(filtered_content)  
 
 cursor.close()
 conn.close()
