@@ -1,0 +1,82 @@
+import csv
+import psycopg2
+import uuid
+from datetime import datetime
+
+# Database connection
+connection_string = "dbname='StationBasis' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
+try:
+    conn = psycopg2.connect(connection_string)
+    cursor = conn.cursor()
+except Exception as e:
+    print(f"Database connection error: {e}")
+    exit(1)
+
+# Input van de moderator
+Naam_Moderator = input("Vul hier uw Moderator Naam: ")
+Email_Moderator = input("Vul hier uw Moderator Email: ")
+Datum_tijd = datetime.now()
+
+# Read CSV
+with (open('Check_Bericht.csv') as csvfile):
+    bestand = csv.reader(csvfile)
+    eerste_regel = next(bestand)
+    approved_messages = []
+
+    for regel in bestand:
+        if len(regel) == 4:
+            Datum, Station, Naam, Bericht = regel
+
+            while True:
+                check_bericht = input(f"Dit is het bericht: {Bericht}\nWordt dit bericht goedgekeurd? (ja/nee) ").lower()
+
+                if check_bericht == 'ja':
+                    Goedkeurings_vraag = True
+                    keuring = 'Goedgekeurd'
+                    print("Bericht is goedgekeurd.")
+                    break
+                elif check_bericht == 'nee':
+                    Goedkeurings_vraag = False
+                    keuring = 'Afgekeurd'
+                    print("Bericht is afgekeurd.")
+                    break
+                else:
+                    print("Beantwoord alleen met 'ja' of 'nee'.")
+                    continue
+
+            unieke_id_0 = str(uuid.uuid4())
+            unieke_id_1 = str(uuid.uuid4())
+            unieke_id_2 = str(uuid.uuid4())
+            # Open the file for reading
+            with open('data.txt', 'r') as file:
+                stations = file.read().splitlines()
+
+            # Create a dictionary to store station numbers
+            station_numbers = {}
+
+            
+            cursor.execute(
+                "INSERT INTO Goedkeuring_Check (nummer, bericht_check, keuring, tijd) VALUES (%s, %s, %s, %s)",
+                (unieke_id_0, Bericht, keuring, Datum_tijd))
+            cursor.execute(
+                "INSERT INTO Moderator (nummer, Moderator_naam, Moderator_Email) VALUES (%s, %s, %s)",
+                (unieke_id_1, Naam_Moderator, Email_Moderator))
+            cursor.execute(
+                "INSERT INTO Info_Bericht (nummer, locatie_station, naam_gebruiker,tijd,bericht) VALUES (%s, %s, %s,%s,%s)",
+                (unieke_id_2, Station, Naam,Datum,Bericht))
+
+            conn.commit()
+
+        else:
+            approved_messages.append(regel)
+    else:
+        print("Er zijn op dit moment geen Berichten in het bestand")
+
+with open('Check_Bericht.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(eerste_regel)  
+    writer.writerows(approved_messages)  
+
+# eindig database connection
+cursor.close()
+conn.close()
