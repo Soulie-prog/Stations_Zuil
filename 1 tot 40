@@ -1,1 +1,6 @@
-for index, station in enumerate(stations, start=1): station_numbers[station] = index # Print the station numbers for station, number in station_numbers.items(): cursor.execute( "INSERT INTO station (naam, nummer) VALUES (%s, %s)", (station, number)) conn.commit().
+for index, station in enumerate(stations, start=1): 
+station_numbers[station] = index 
+# Print de station numbers 
+for station, number in station_numbers.items():
+cursor.execute( "INSERT INTO station (naam, nummer) VALUES (%s, %s)", (station, number)) 
+conn.commit().
