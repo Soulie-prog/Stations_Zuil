@@ -3,7 +3,6 @@ import json
 import requests
 import random
 import psycopg2
-import pygubu
 from datetime import datetime
 
 def scherm():
@@ -27,16 +26,35 @@ def scherm():
     weather_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
     weather_label.place(x=60, y=500)  # Adjust the position as needed
 
+    date_time_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), fg='#003082', bg='#FFC917', anchor='e')
+    date_time_label.place(x=1200, y=200)  # Adjust the position as needed
 
-    # Function to update the weather information label
+    messages_text = Text(scherm, width=40, height=10,background='#FFC917')
+    messages_text.place(x=1100, y=450)  # Adjust the position as needed
+
+    # Function to update the date and time label
+    def update_date_time():
+        current_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        date_time_label.config(text=current_date_time)
+        scherm.after(1000, update_date_time)  # Update every 1000ms (1 second)
+
+    update_date_time()
+
+    def Weerbericht():
+        with open('data.txt', 'r') as file:
+            lijst = file.readlines()
+
+        global Station  # Access the global Station variable
+        Station = random.choice(lijst).strip()
+        weather = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={Station},nl&lang=nl&APPID=f662d7e76c05f726fed0413d66484c84')
+        return json.loads(weather.content)
+
     def update_weather():
         global Station  # Access the global Station variable
         weather_data = Weerbericht()
         if 'weather' in weather_data:
             description = weather_data['weather'][0]['description']
             temperature_kelvin = weather_data['main']['temp']
-
-            # Convert temperature from Kelvin to Celsius
             temperature_celsius = temperature_kelvin - 273.15
             weather_info = f'Op station {Station}:\n Weer: {description.capitalize()}\nTemperatuur: {temperature_celsius.__round__()}°C'
             weather_label.config(text=weather_info)
@@ -46,20 +64,11 @@ def scherm():
     update_weather_button = Button(scherm, text='Update Weerbericht', command=update_weather)
     update_weather_button.place(x=60, y=600)
 
-    date_time_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), fg='#003082', bg='#FFC917', anchor='e')
-    date_time_label.place(x=1200, y=200)  # Adjust the position as needed
-
-    # Function to update the date and time label
-    def update_date_time():
-        current_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        date_time_label.config(text=current_date_time)
-        scherm.after(1000, update_date_time)  # Update every 1000ms (1 second)
-
-        # Function to update the last 5 messages
-
+    # Function to update the last 5 messages
     def update_messages():
         # Connect to the database (you need to modify the connection string)
-        connection_string = "your_database_connection_string_here"
+        connection_string = "dbname='StationBasis' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
+
         conn = psycopg2.connect(connection_string)
         cursor = conn.cursor()
 
@@ -77,8 +86,9 @@ def scherm():
         conn.close()
 
     update_messages_button = Button(scherm, text='Update Messages', command=update_messages)
-    update_messages_button.place(x=400, y=100)
+    update_messages_button.place(x=1200, y=600)
 
     scherm.mainloop()
-    
-    update_date_time()
+
+scherm()
+
