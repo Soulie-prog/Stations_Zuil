@@ -1,0 +1,84 @@
+from tkinter import *
+import json
+import requests
+import random
+import psycopg2
+import pygubu
+from datetime import datetime
+
+def scherm():
+    scherm = Tk()
+    scherm.title("Stationzuil")
+    scherm.geometry("800x500")
+    NS_Logo = PhotoImage(file='station.png')
+    NS_Logo_2 = PhotoImage(file='station.png')
+    scherm.iconphoto(True, NS_Logo)
+    scherm.config(background='#FFC917')
+    label = Label(scherm,
+                  text='Welkom Bij het StationZuil van NS',
+                  font=('NS Sans', 40, 'bold'),
+                  fg='#003082',
+                  bg='#FFC917',
+                  image=NS_Logo,
+                  compound='left')
+    label.place(x=200, y=20)
+
+    # Create a label to display the weather information
+    weather_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
+    weather_label.place(x=60, y=500)  # Adjust the position as needed
+
+
+    # Function to update the weather information label
+    def update_weather():
+        global Station  # Access the global Station variable
+        weather_data = Weerbericht()
+        if 'weather' in weather_data:
+            description = weather_data['weather'][0]['description']
+            temperature_kelvin = weather_data['main']['temp']
+
+            # Convert temperature from Kelvin to Celsius
+            temperature_celsius = temperature_kelvin - 273.15
+            weather_info = f'Op station {Station}:\n Weer: {description.capitalize()}\nTemperatuur: {temperature_celsius.__round__()}°C'
+            weather_label.config(text=weather_info)
+        else:
+            weather_label.config(text='Weerbericht niet beschikbaar')
+
+    update_weather_button = Button(scherm, text='Update Weerbericht', command=update_weather)
+    update_weather_button.place(x=60, y=600)
+
+    date_time_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), fg='#003082', bg='#FFC917', anchor='e')
+    date_time_label.place(x=1200, y=200)  # Adjust the position as needed
+
+    # Function to update the date and time label
+    def update_date_time():
+        current_date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        date_time_label.config(text=current_date_time)
+        scherm.after(1000, update_date_time)  # Update every 1000ms (1 second)
+
+        # Function to update the last 5 messages
+
+    def update_messages():
+        # Connect to the database (you need to modify the connection string)
+        connection_string = "your_database_connection_string_here"
+        conn = psycopg2.connect(connection_string)
+        cursor = conn.cursor()
+
+        # Fetch the last 5 messages from the database
+        cursor.execute(
+            "SELECT bericht FROM Info_Bericht ORDER BY tijd DESC LIMIT 5"
+        )
+        messages = cursor.fetchall()
+
+        # Display the messages in the text widget
+        messages_text.delete(1.0, END)  # Clear the text widget
+        for message in messages:
+            messages_text.insert(END, message[0] + "\n")  # Append each message
+
+        conn.close()
+
+    update_messages_button = Button(scherm, text='Update Messages', command=update_messages)
+    update_messages_button.place(x=400, y=100)
+
+    scherm.mainloop()
+    
+    update_date_time()
