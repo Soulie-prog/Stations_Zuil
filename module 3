@@ -27,17 +27,17 @@ def scherm():
                   compound='left')
     label.place(x=200, y=20)
 
-    weather_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
-    weather_label.place(x=130, y=300)
+    weer_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
+    weer_label.place(x=130, y=300)
 
     date_time_label = Label(scherm, text='', font=('NS Sans', 30, 'bold'), fg='#003082', bg='#FFC917', anchor='e')
     date_time_label.place(x=1000, y=200)
 
-    messages_text = Text(scherm, font=('NS Sans', 25, 'bold'), width=40, height=10, fg='#003082', background='#FFC917', borderwidth=2, relief="solid")
-    messages_text.place(x=600, y=450)  
+    berichten_text = Text(scherm, font=('NS Sans', 25, 'bold'), width=40, height=10, fg='#003082', background='#FFC917', borderwidth=2, relief="solid")
+    berichten_text.place(x=600, y=450)
 
-    facilities_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
-    facilities_label.place(x=60, y=600)
+    faciliteiten_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
+    faciliteiten_label.place(x=60, y=600)
 
     # Function to update the date and time label
     def update_date_time():
@@ -53,11 +53,11 @@ def scherm():
 
         global Station  #global Station variabele
         Station = random.choice(lijst).strip()
-        weather = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={Station},nl&lang=nl&APPID=f662d7e76c05f726fed0413d66484c84')
-        return json.loads(weather.content)
+        weer = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={Station},nl&lang=nl&APPID=f662d7e76c05f726fed0413d66484c84')
+        return json.loads(weer.content)
 
 
-    def update_messages():
+    def update_berichten():
         # Connect to the database
         connection_string = "dbname='StationBasis' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
 
@@ -67,29 +67,33 @@ def scherm():
         cursor.execute(
             "SELECT bericht_check FROM Goedkeuring_Check WHERE keuring = 'Goedgekeurd' ORDER BY nummer DESC LIMIT 5"
         )
-        messages = cursor.fetchall()
+        berichten = cursor.fetchall()
 
-        messages_text.delete(1.0, END)
-        for message in messages:
-            messages_text.insert(END, message[0] + "\n")  # Append elke bericht
+        berichten_text.delete(1.0, END)
+        for bericht in berichten:
+            berichten_text.insert(END, bericht[0] + "\n")  # Append elke bericht
 
         conn.close()
 
 
-    def update_weather_and_facilities():
+    def update_weer_en_faciliteiten():
 
 
         global current_station
+        global Fiets_logo
+        global Fiets_logo
+        global Fiets_logo
 
-        weather_data = Weerbericht()
-        if 'weather' in weather_data:
-            description = weather_data['weather'][0]['description']
-            temperature_kelvin = weather_data['main']['temp']
-            temperature_celsius = temperature_kelvin - 273.15
-            weather_info = f'Op station {current_station}:\n Weer: {description.capitalize()}\nTemperatuur: {temperature_celsius.__round__()}°C'
-            weather_label.config(text=weather_info,fg='#003082', font=('NS Sans', 30, 'bold'))
+
+        weer_data = Weerbericht()
+        if 'weather' in weer_data:
+            beschrijving = weer_data['weather'][0]['description']
+            temperatuur_kelvin = weer_data['main']['temp']
+            temperatuur_celsius = temperatuur_kelvin - 273.15
+            weer_info = f'Op station {current_station}:\n Weer: {beschrijving.capitalize()}\nTemperatuur: {temperatuur_celsius.__round__()}°C'
+            weer_label.config(text=weer_info,fg='#003082', font=('NS Sans', 30, 'bold'))
         else:
-            weather_label.config(text='Weerbericht niet beschikbaar')
+            weer_label.config(text='Weerbericht niet beschikbaar')
 
         # Update facilities information
         connection_string = "dbname='StationBasis' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
@@ -98,7 +102,7 @@ def scherm():
 
         cursor.execute("SELECT ov_bike, elevator, toilet, park_and_ride FROM station_service WHERE station_city = %s",
                        (current_station,))
-        facilities = cursor.fetchone()
+        faciliteiten = cursor.fetchone()
 
         conn.close()
 
@@ -114,7 +118,7 @@ def scherm():
         pr_Logo = PhotoImage(file='img_pr.png')
         pr_Logo = pr_Logo.subsample(2)
 
-        facilities_info = f'Faciliteiten op station {current_station}:\n'
+        faciliteiten_info = f'Faciliteiten op station {current_station}:\n'
         label_tekst = Label(
             scherm,
             text='Recente Berichten:',
@@ -124,25 +128,42 @@ def scherm():
         )
         label_tekst.place(x=600, y=380)
 
-        if facilities[0]:
-            facilities_info += '- OV-fietsen\n'
-        if facilities[1]:
-            facilities_info += '- Lift\n'
-        if facilities[2]:
-            facilities_info += '- Toilet\n'
-        if facilities[3]:
-            facilities_info += '- P+R\n'
 
-        facilities_label.config(text=facilities_info,
+        if faciliteiten[0]:
+            ov_bike_label = Label(scherm, text="", image=fiets_Logo)
+            ov_bike_label.place(x=1280, y=270)
+            ov_bike_label.img_ref = fiets_Logo
+
+
+        if faciliteiten[1]:
+            elevator_label = Label(scherm, text="", image=lift_Logo)
+            elevator_label.place(x=1280, y=270)
+            elevator_label.img_ref = lift_Logo
+
+        if faciliteiten[2]:
+            toilet_label = Label(scherm, text="", image=toilet_Logo)
+            toilet_label.place(x=1130, y=270)
+            toilet_label.img_ref = toilet_Logo
+
+        if faciliteiten[3]:
+            park_and_ride_label = Label(scherm, text="", image=pr_Logo)
+            park_and_ride_label.place(x=1130, y=270)
+            park_and_ride_label.img_ref = pr_Logo
+
+        faciliteiten_label.config(text=faciliteiten_info,
             font=('NS Sans', 30, 'bold'),
             fg='#003082',
             bg='#FFC917'
         )
 
-    update_weather_and_facilities()
-    update_messages()
+    update_weer_en_faciliteiten()
+    update_berichten()
     scherm.mainloop()
 
 scherm()
+
+
+
+
 
 
