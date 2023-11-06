@@ -25,19 +25,19 @@ def scherm():
                   bg='#FFC917',
                   image=NS_Logo,
                   compound='left')
-    label.place(x=200, y=20)
+    label.place(x=20, y=20)
 
     weer_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
-    weer_label.place(x=130, y=300)
+    weer_label.place(x=1000, y=80)
 
     date_time_label = Label(scherm, text='', font=('NS Sans', 30, 'bold'), fg='#003082', bg='#FFC917', anchor='e')
-    date_time_label.place(x=1000, y=200)
+    date_time_label.place(x=600, y=200)
 
     berichten_text = Text(scherm, font=('NS Sans', 25, 'bold'), width=40, height=10, fg='#003082', background='#FFC917', borderwidth=2, relief="solid")
-    berichten_text.place(x=600, y=450)
+    berichten_text.place(x=1, y=450)
 
     faciliteiten_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
-    faciliteiten_label.place(x=60, y=600)
+    faciliteiten_label.place(x=900, y=450)
 
     # Function to update the date and time label
     def update_date_time():
@@ -90,7 +90,7 @@ def scherm():
             beschrijving = weer_data['weather'][0]['description']
             temperatuur_kelvin = weer_data['main']['temp']
             temperatuur_celsius = temperatuur_kelvin - 273.15
-            weer_info = f'Op station {current_station}:\n Weer: {beschrijving.capitalize()}\nTemperatuur: {temperatuur_celsius.__round__()}°C'
+            weer_info = f' Station {current_station}:\n Weer: {beschrijving.capitalize()}\nTemperatuur: {temperatuur_celsius.__round__()}°C'
             weer_label.config(text=weer_info,fg='#003082', font=('NS Sans', 30, 'bold'))
         else:
             weer_label.config(text='Weerbericht niet beschikbaar')
@@ -107,16 +107,12 @@ def scherm():
         conn.close()
 
         fiets_Logo = PhotoImage(file='img_ovfiets.png')
-        fiets_Logo = fiets_Logo.subsample(2)  #helft van de origineele foto
 
         toilet_Logo = PhotoImage(file='img_toilet.png')
-        toilet_Logo = toilet_Logo.subsample(2)
 
         lift_Logo = PhotoImage(file='img_lift.png')
-        lift_Logo = lift_Logo.subsample(2)
 
         pr_Logo = PhotoImage(file='img_pr.png')
-        pr_Logo = pr_Logo.subsample(2)
 
         faciliteiten_info = f'Faciliteiten op station {current_station}:\n'
         label_tekst = Label(
@@ -126,28 +122,28 @@ def scherm():
             fg='#003082',
             bg='#FFC917'
         )
-        label_tekst.place(x=600, y=380)
+        label_tekst.place(x=1, y=380)
 
 
         if faciliteiten[0]:
             ov_bike_label = Label(scherm, text="", image=fiets_Logo)
-            ov_bike_label.place(x=1280, y=270)
+            ov_bike_label.place(x=1200, y=600)
             ov_bike_label.img_ref = fiets_Logo
 
 
         if faciliteiten[1]:
             elevator_label = Label(scherm, text="", image=lift_Logo)
-            elevator_label.place(x=1280, y=270)
+            elevator_label.place(x=1200, y=600)
             elevator_label.img_ref = lift_Logo
 
         if faciliteiten[2]:
             toilet_label = Label(scherm, text="", image=toilet_Logo)
-            toilet_label.place(x=1130, y=270)
+            toilet_label.place(x=900, y=600)
             toilet_label.img_ref = toilet_Logo
 
         if faciliteiten[3]:
             park_and_ride_label = Label(scherm, text="", image=pr_Logo)
-            park_and_ride_label.place(x=1130, y=270)
+            park_and_ride_label.place(x=900, y=600)
             park_and_ride_label.img_ref = pr_Logo
 
         faciliteiten_label.config(text=faciliteiten_info,
