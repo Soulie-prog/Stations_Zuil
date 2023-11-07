@@ -71,8 +71,3 @@ else:
 with open('Check_Bericht.csv', 'a') as file:
     file.write(f'{datum}, {Station_Keuze}, {Naam}, {bericht} \n')
 
-
-with open('Check_Bericht.csv','a') as file:
-    file.write(f'{datum}, {Station_Keuze}, \" {Naam} \",\" {bericht} \" \n')
-
-
