@@ -87,5 +87,5 @@ with open('Check_Bericht.csv', 'w', newline='') as csvfile:
 cursor.close()
 conn.close()
 
-conn.close()
+
 
