@@ -3,32 +3,30 @@ import psycopg2
 import uuid
 from datetime import datetime
 
-# Database connection
-connection_string = "dbname='Stationsbase' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
-try:
-    conn = psycopg2.connect(connection_string)
-    cursor = conn.cursor()
-except Exception as e:
-    print(f"Database connection error: {e}")
-    exit(1)
+# verbind met de database
+connection_string = "dbname='stationszuil' user='postgres' password='Soulaim@n250' host='51.104.38.35' port='5432'"
 
-# Input from the moderator
+conn = psycopg2.connect(connection_string)  # Verbinding maken met de database
+cursor = conn.cursor()
+
+# Invoer van de moderator
 Naam_Moderator = input("Vul hier uw Moderator Naam: ")
 Email_Moderator = input("Vul hier uw Moderator Email: ")
-Datum_tijd = datetime.now()
+Datum_tijd = datetime.now()  # datum van de computer weer ophalen als in module 1
 
-# Read CSV
-with open('Check_Bericht.csv') as csvfile:
+# open en leest het cs bestand
+with (open('Check_Bericht.csv') as csvfile):
     bestand = csv.reader(csvfile)
     eerste_regel = next(bestand)
-    approved_messages = []
+    Goedgekeurde_berichten = [] # maak een lege lijst aan
 
     for regel in bestand:
         if len(regel) == 4:
-            Datum, Station, Naam, Bericht = regel
+            Datum, Station, Naam, Bericht = regel  # Splits de regel in verschillende velden
 
             while True:
-                check_bericht = input(f"Dit is het bericht: {Bericht}\nWordt dit bericht goedgekeurd? (ja/nee) ").lower()
+                check_bericht = input(
+                    f"Dit is het bericht: {Bericht}\nWordt dit bericht goedgekeurd? (ja/nee) ").lower()
 
                 if check_bericht == 'ja':
                     Goedkeurings_vraag = True
@@ -42,32 +40,52 @@ with open('Check_Bericht.csv') as csvfile:
                     break
                 else:
                     print("Beantwoord alleen met 'ja' of 'nee'.")
-                    continue
+                    continue  # Blijf vragen totdat een geldig antwoord is gegeven
 
-            # Generate a unique identifier for each message
-            unieke_id_0 = str(uuid.uuid4())
-            unieke_id_1 = str(uuid.uuid4())
+            unieke_id_0 = str(uuid.uuid4())  # Genereer een unieke ID
+            unieke_id_1 = str(uuid.uuid4())  # Genereer een andere unieke ID
+            unieke_id_2 = str(uuid.uuid4())  # Genereer nog een unieke ID
 
-            # Insert the approved message into the database
-            cursor.execute(
-                "INSERT INTO Goedkeuring_Check (nummer, bericht_check, keuring, tijd) VALUES (%s, %s, %s, %s)",
-                (unieke_id_0, Bericht, keuring, Datum_tijd))
+            # Het lezen van stations uit een bestand
+            with open('data.txt', 'r') as file:
+                stations = file.read().splitlines()
+
+            # Een dictionary maken om stationsnummers op te slaan
+            station_numbers = {}
+
             cursor.execute(
                 "INSERT INTO Moderator (nummer, Moderator_naam, Moderator_Email) VALUES (%s, %s, %s)",
-                (unieke_id_1, Naam_Moderator, Email_Moderator))
-            conn.commit()
+                (unieke_id_1, Naam_Moderator, Email_Moderator))  # gegevens van tabel moderator worden nu bijgevoegd
+
+            cursor.execute(
+                "INSERT INTO Info_Bericht (nummer, locatie_station, naam_gebruiker, tijd, bericht) VALUES (%s, %s, %s, %s, %s)",
+                (unieke_id_2, Station, Naam, Datum, Bericht))  # gegevens van tabel infobericht worden nu bijgevoegd
+
+            cursor.execute(
+                "INSERT INTO Goedkeuring_Check (nummer, bericht_check, keuring, tijd, moderator_id, infobericht_id) VALUES (%s, %s, %s, %s, %s, %s) RETURNING nummer",
+                (unieke_id_0, Bericht, keuring, Datum_tijd, unieke_id_1, unieke_id_2))
+            goedkeuring_id = cursor.fetchone()[0]  # gegevens van tabel goedkeuringscheck worden nu bijgevoegd
+
+            cursor.execute(
+                "UPDATE Info_Bericht SET goedkeuring_check_id = %s WHERE nummer = %s",
+                (goedkeuring_id, unieke_id_2))  # Update de info zodat er bij een 1 op 1 relaties zichtbaar zijn bij elkaars tabellen
+
+            conn.commit()  # Bevestig de transactie in de database
 
         else:
-            approved_messages.append(regel)
+            Goedgekeurde_berichten.append(regel) # als iets niet lukt blijven de berichten nog in de csv file
     else:
         print("Er zijn op dit moment geen Berichten in het bestand")
-# Rewrite the approved content back to the original CSV file
+
+# Schrijft de berichten terug naar het CSV-bestand
 with open('Check_Bericht.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(eerste_regel)  # Write the header
-    writer.writerows(approved_messages)  # Write the approved messages
+    writer.writerow(eerste_regel)  # eerste regel van het CSV-bestand
+    writer.writerows(Goedgekeurde_berichten)  # Schrijf de  berichten terug
 
-# Close database connection
+# Sluit verbinding met de database
 cursor.close()
+conn.close()
+
 conn.close()
 
