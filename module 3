@@ -9,40 +9,40 @@ def scherm():
     with open('data.txt', 'r') as file:
         lijst = file.readlines()
 
-    global current_station
-    current_station = random.choice(lijst).strip()
+    global current_station # global zorgt ervoor dat variabele in andere functies kan worden hergebruikt
+    current_station = random.choice(lijst).strip() #kiest random station uit om te openen
     scherm = Tk()
-    scherm.title("Stationzuil")
-    scherm.geometry("800x500")
-    NS_Logo = PhotoImage(file='station.png')
+    scherm.title("Stationzuil") # titel met tkinter
+    scherm.geometry("2000x900") # grootte met tkinter opent gelijk op optimale grootte (tenminste voor mij doet hij dat)
+    NS_Logo = PhotoImage(file='station.png')# pictogram van ns logo
     NS_Logo_2 = PhotoImage(file='station.png')
     scherm.iconphoto(True, NS_Logo)
-    scherm.config(background='#FFC917')
+    scherm.config(background='#FFC917') #achter grond kleur
     label = Label(scherm,
                   text=f'Welkom Bij Station {current_station} Centraal',
-                  font=('NS Sans', 40, 'bold'),
-                  fg='#003082',
+                  font=('NS Sans', 40, 'bold'), # letter type ns
+                  fg='#003082',# voorgrond kleur
                   bg='#FFC917',
                   image=NS_Logo,
-                  compound='left')
-    label.place(x=20, y=20)
+                  compound='left')# positie van logo links boven
+    label.place(x=20, y=20) # positie titel boven
 
     weer_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
-    weer_label.place(x=1000, y=80)
+    weer_label.place(x=1100, y=80) # positie van de weer label
 
-    date_time_label = Label(scherm, text='', font=('NS Sans', 30, 'bold'), fg='#003082', bg='#FFC917', anchor='e')
-    date_time_label.place(x=600, y=200)
+    date_time_label = Label(scherm, text='', font=('NS Sans', 40, 'bold'), fg='#003082', bg='#FFC917', anchor='e')
+    date_time_label.place(x=550, y=200) # positie van de tijd
 
     berichten_text = Text(scherm, font=('NS Sans', 25, 'bold'), width=40, height=10, fg='#003082', background='#FFC917', borderwidth=2, relief="solid")
-    berichten_text.place(x=1, y=450)
+    berichten_text.place(x=1, y=450) # positie van de bericht vak
 
     faciliteiten_label = Label(scherm, text='', font=('NS Sans', 20, 'bold'), bg='#FFC917')
     faciliteiten_label.place(x=900, y=450)
 
     # Function to update the date and time label
     def update_date_time():
-        current_date_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        date_time_label.config(text=current_date_time)
+        nu_date_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S") # wou het op de nederlandse volgorde hebben
+        date_time_label.config(text=nu_date_time)
         scherm.after(1000, update_date_time)  # Update elke 1000ms (1 second)
 
     update_date_time()
@@ -53,25 +53,25 @@ def scherm():
 
         global Station  #global Station variabele
         Station = random.choice(lijst).strip()
-        weer = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={Station},nl&lang=nl&APPID=f662d7e76c05f726fed0413d66484c84')
+        weer = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={Station},nl&lang=nl&APPID=f662d7e76c05f726fed0413d66484c84') # api request voor de weer
         return json.loads(weer.content)
 
 
     def update_berichten():
         # Connect to the database
-        connection_string = "dbname='StationBasis' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
+        connection_string = "dbname='stationszuil' user='postgres' password='Soulaim@n250' host='51.104.38.35' port='5432'"
 
         conn = psycopg2.connect(connection_string)
         cursor = conn.cursor()
-
+        #zorgt ervoor dat alleen recente berichten tevoorschijn komen limiet van berichten is 5 en alleen de berichten die goedgekeurd zij.
         cursor.execute(
             "SELECT bericht_check FROM Goedkeuring_Check WHERE keuring = 'Goedgekeurd' ORDER BY nummer DESC LIMIT 5"
         )
         berichten = cursor.fetchall()
 
-        berichten_text.delete(1.0, END)
+        berichten_text.delete(1.0, END) # verwijder de bestaande berichten van de vak
         for bericht in berichten:
-            berichten_text.insert(END, bericht[0] + "\n")  # Append elke bericht
+            berichten_text.insert(END, bericht[0] + "\n")  # Append elke bericht in de vak met een nieuwe regel van beneden naar boven
 
         conn.close()
 
@@ -89,30 +89,30 @@ def scherm():
         if 'weather' in weer_data:
             beschrijving = weer_data['weather'][0]['description']
             temperatuur_kelvin = weer_data['main']['temp']
-            temperatuur_celsius = temperatuur_kelvin - 273.15
-            weer_info = f' Station {current_station}:\n Weer: {beschrijving.capitalize()}\nTemperatuur: {temperatuur_celsius.__round__()}°C'
+            temperatuur_celsius = temperatuur_kelvin - 273.15 # van kelvin naar celsius
+            weer_info = f'Weer: {beschrijving.capitalize()}\nTemperatuur: {temperatuur_celsius.__round__()}°C'
             weer_label.config(text=weer_info,fg='#003082', font=('NS Sans', 30, 'bold'))
         else:
             weer_label.config(text='Weerbericht niet beschikbaar')
 
         # Update facilities information
-        connection_string = "dbname='StationBasis' user='postgres' password='Soulaim@n25' host='localhost' port='5432'"
+        connection_string = "dbname='stationszuil' user='postgres' password='Soulaim@n250' host='51.104.38.35' port='5432'"
         conn = psycopg2.connect(connection_string)
         cursor = conn.cursor()
-
-        cursor.execute("SELECT ov_bike, elevator, toilet, park_and_ride FROM station_service WHERE station_city = %s",
+        # neem de faciliteiten van de database
+        cursor.execute("SELECT ov_bike, elevator, toilet, park_and_ride FROM station WHERE station_city = %s",
                        (current_station,))
         faciliteiten = cursor.fetchone()
 
         conn.close()
 
-        fiets_Logo = PhotoImage(file='img_ovfiets.png')
+        fiets_Logo = PhotoImage(file='img_ovfiets.png') # pictogram fiets
 
-        toilet_Logo = PhotoImage(file='img_toilet.png')
+        toilet_Logo = PhotoImage(file='img_toilet.png') # pictogram toilet
 
-        lift_Logo = PhotoImage(file='img_lift.png')
+        lift_Logo = PhotoImage(file='img_lift.png') # pictogram lift
 
-        pr_Logo = PhotoImage(file='img_pr.png')
+        pr_Logo = PhotoImage(file='img_pr.png') # pictogram pr
 
         faciliteiten_info = f'Faciliteiten op station {current_station}:\n'
         label_tekst = Label(
@@ -125,7 +125,7 @@ def scherm():
         label_tekst.place(x=1, y=380)
 
 
-        if faciliteiten[0]:
+        if faciliteiten[0]: # in andere woorden de eerste faciliteit in de select gedeelte fiets dus
             ov_bike_label = Label(scherm, text="", image=fiets_Logo)
             ov_bike_label.place(x=1200, y=600)
             ov_bike_label.img_ref = fiets_Logo
@@ -151,12 +151,13 @@ def scherm():
             fg='#003082',
             bg='#FFC917'
         )
-
+    #roep de functies aan
     update_weer_en_faciliteiten()
     update_berichten()
     scherm.mainloop()
-
+#roep de main functie aan
 scherm()
+
 
 
 
