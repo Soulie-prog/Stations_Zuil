@@ -1,39 +1,37 @@
-Create table Moderator(
-	nummer UUID PRIMARY KEY,	
-	Moderator_naam varchar(255) not null,
-	Moderator_Email varchar (255) not null
+CREATE TABLE Moderator (
+    nummer uuid PRIMARY KEY,
+    Moderator_naam varchar(255) NOT NULL,
+    Moderator_Email varchar(255) NOT NULL
 );
 
-Create table Goedkeuring_Check(
-	nummer UUID PRIMARY KEY,
-	keuring varchar(255) not null,
-	bericht_check varchar(255) not null,
-	tijd varchar(255) not null
+CREATE TABLE Goedkeuring_Check (
+    nummer uuid PRIMARY KEY,
+    keuring varchar(255) NOT NULL,
+    bericht_check varchar(255) NOT NULL,
+    tijd varchar(255) NOT NULL
 );
 
-Create table Info_Bericht(
-	nummer UUID PRIMARY KEY,
-	locatie_station varchar(255) not null,
-	naam_gebruiker varchar(255),
-	tijd varchar(255) not null,
-	bericht varchar(255) not null
+CREATE TABLE station (
+    station_city varchar(50) PRIMARY KEY NOT NULL,
+    country varchar(2) NOT NULL,
+    ov_bike BOOLEAN NOT NULL,
+    elevator BOOLEAN NOT NULL,
+    toilet BOOLEAN NOT NULL,
+    park_and_ride BOOLEAN NOT NULL
 );
 
-Create table station(
-	nummer varchar (255) primary key not null,
-	naam varchar (255)
+CREATE TABLE Info_Bericht (
+    nummer uuid PRIMARY KEY,
+    locatie_station varchar(255) NOT NULL,
+    naam_gebruiker varchar(255),
+    tijd varchar(255) NOT NULL,
+    bericht varchar(255) NOT NULL
 );
 
-CREATE TABLE station_service (
-station_city VARCHAR (50) PRIMARY KEY NOT NULL,
-country VARCHAR (2) NOT NULL,
-ov_bike BOOLEAN NOT NULL,
-elevator BOOLEAN NOT NULL,
-toilet BOOLEAN NOT NULL,
-park_and_ride BOOLEAN NOT NULL
-);
 
-INSERT INTO station_service (
+
+
+INSERT INTO station (
 -- station_id, station_code, station_name,
 station_city, country, ov_bike, elevator, toilet, park_and_ride)
 VALUES
@@ -79,19 +77,13 @@ VALUES
 ('Zutphen', 'NL', false, true, false, true);
 
 ALTER TABLE Goedkeuring_Check
-ADD COLUMN Moderator_ID UUID REFERENCES Moderator (nummer);
+ADD COLUMN Moderator_ID uuid REFERENCES Moderator (nummer);
 
 ALTER TABLE Goedkeuring_Check
-ADD COLUMN InfoBericht_ID UUID REFERENCES Info_Bericht (nummer);
+ADD COLUMN InfoBericht_ID uuid REFERENCES Info_Bericht (nummer);
 
 ALTER TABLE Info_Bericht
-ADD COLUMN Goedkeuring_Check_ID UUID REFERENCES Goedkeuring_Check (nummer);
+ADD COLUMN station_ID varchar(255) REFERENCES station (station_city);
 
 ALTER TABLE Info_Bericht
-ADD COLUMN station_ID varchar(255) REFERENCES station (nummer);
-
-ALTER TABLE station_service
-ADD COLUMN station_ID varchar(255) REFERENCES station (nummer);
-
-select * from Moderator
-select * from Goedkeuring_Check
+ADD COLUMN Goedkeuring_Check_ID uuid REFERENCES Goedkeuring_Check (nummer);
